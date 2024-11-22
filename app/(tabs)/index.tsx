@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,93 +6,190 @@ import {
   StyleSheet,
   ImageBackground,
   ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import FoodCard from "@/components/Card/FoodCard";
 import PromoBanner from "@/components/Card/OfferCard";
 import { moderateScale } from "@/utils/spacing";
+import useStore from "@/hooks/useStore";
+import { getDishByDiseases } from "@/api/diseases";
+import Toast from "react-native-toast-message";
+import { router } from "expo-router";
+import { Entypo, MaterialCommunityIcons } from "@expo/vector-icons";
+import { getAllCoupons } from "@/api/coupon";
+import { Coupon } from "@/interfaces";
 
-const data = [
-  {
-    id: "1",
-    title: "Sushi",
-    description: "Japanese | Sushi Eats | 300-400gm cal",
-    image: require("../../assets/images/assets/sussi.png"),
-    isFeatured: true,
-  },
-  {
-    id: "2",
-    title: "Garlic Bread",
-    description: "Italian | Bread Delight | 150-200gm cal",
-    image: require("../../assets/images/assets/apple.png"),
-    isFeatured: false,
-  },
-  {
-    id: "3",
-    title: "Apples",
-    description: "Fruit | Healthy Snack | 50-70gm cal",
-    image: require("../../assets/images/assets/sussi.png"),
-    isFeatured: true,
-  },
-  {
-    id: "4",
-    title: "Baked Spicy Chicken",
-    description: "Spicy Delight | Chicken Eats | 300-400gm cal",
-    image: require("../../assets/images/assets/apple.png"),
-    isFeatured: false,
-  },
-  {
-    id: "5",
-    title: "Oat Meals",
-    description: "Healthy Breakfast | 200-300gm cal",
-    image: require("../../assets/images/assets/sussi.png"),
-    isFeatured: true,
-  },
-  {
-    id: "6",
-    title: "Kivi Juice",
-    description: "Refreshing Drink | 100-150gm cal",
-    image: require("../../assets/images/assets/apple.png"),
-    isFeatured: false,
-  },
-];
+interface Item {
+  id: number;
+  name: string;
+  image: string;
+  info: string;
+  meals: string;
+  price: string;
+}
 
 export default function Dashboard() {
+  const diseaseId = useStore((state) => state.disease);
+  const username = useStore((state) => state.username);
+  const token = useStore((state) => state.token);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // For refresh control
+  const [dishes, setDishes] = useState([]);
+  const removeToken = useStore((state) => state.removeToken);
+  const setDisease = useStore((state) => state.setDisease);
+  const setUsername = useStore((state) => state.setUsername);
+  const resetIsVerified = useStore((state) => state.resetIsVerified);
+  const [coupons, setCoupons] = useState<Coupon>();
+
+  const fetchDishes = async () => {
+    setLoading(true);
+    try {
+      if (token && diseaseId) {
+        const res = await getDishByDiseases(diseaseId, token || "");
+        setDishes(res);
+      }
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: "Error Fetching Dish",
+        text2: err.response?.data?.error || "An error occurred",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCoupons = async () => {
+    try {
+      if (token && diseaseId) {
+        const data = await getAllCoupons(token || "");
+        setCoupons(data[0]);
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDishes(); // Re-fetch dishes
+    await fetchCoupons();
+    setRefreshing(false);
+  };
+
+  const handleLogout = () => {
+    removeToken();
+    setDisease("");
+    resetIsVerified();
+    setUsername("");
+    router.push("/(auth)");
+  };
+
+  useEffect(() => {
+    fetchDishes();
+    fetchCoupons();
+  }, [diseaseId, token]);
+
+  if (loading)
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <ImageBackground
-        source={require("../../assets/images/assets/home page top.png")}
-        style={styles.topImage}
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
-        <Text style={styles.title}>Maple Mornings</Text>
-      </ImageBackground>
+        <ImageBackground
+          source={require("../../assets/images/assets/home page top.png")}
+          style={styles.topImage}
+        >
+          <Text style={styles.title}>Maple Mornings</Text>
+        </ImageBackground>
 
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>Welcome, Devang!</Text>
-
-        <PromoBanner />
-
-        <Text style={styles.sortedTitle}>Sorted for you!</Text>
-
-        <FlatList
-          data={data}
-          renderItem={({ item }) => (
-            <FoodCard
-              title={item.title}
-              description={item.description}
-              image={item.image}
-              isFeatured={item.isFeatured}
+        <View style={styles.content}>
+          <View
+            style={{
+              justifyContent: "space-between",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.welcomeText}>Welcome, {username}!</Text>
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={{
+                width: moderateScale(40),
+                height: moderateScale(40),
+                backgroundColor: "#00000011",
+                borderRadius: moderateScale(200),
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <MaterialCommunityIcons name="logout" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
+          {coupons && (
+            <PromoBanner
+              code={coupons?.code}
+              discount={coupons?.discountPercentage}
             />
           )}
-          keyExtractor={(item) => item.id}
-          numColumns={3}
-          scrollEnabled={false} // Disable FlatList scrolling as ScrollView will handle it
-          contentContainerStyle={styles.cardList}
-          showsVerticalScrollIndicator={false} // Hide FlatList scroll indicator
-        />
+          <Text style={styles.sortedTitle}>Sorted for you!</Text>
 
-        <Text style={styles.seeMoreText}>see more</Text>
+          <FlatList
+            data={dishes}
+            renderItem={({ item }: { item: Item }) => (
+              <FoodCard
+                title={item.name}
+                description={item.info}
+                image={item.image}
+                isFeatured={true}
+                dish={item}
+              />
+            )}
+            keyExtractor={(item) => item.id.toString()}
+            numColumns={3}
+            scrollEnabled={false}
+            contentContainerStyle={styles.cardList}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </ScrollView>
+
+      <View
+        style={{
+          position: "absolute",
+          bottom: moderateScale(94),
+          right: moderateScale(16),
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.push("/(cart)")}
+          style={{
+            width: moderateScale(40),
+            height: moderateScale(40),
+            backgroundColor: "#00000011",
+            borderRadius: moderateScale(200),
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Entypo name="shopping-cart" size={24} />
+        </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -124,54 +221,10 @@ const styles = StyleSheet.create({
     fontFamily: "PoppinsSemiBold",
     marginVertical: moderateScale(15),
   },
-  promoBanner: {
-    backgroundColor: "#FAE2A4",
-    borderRadius: moderateScale(10),
-    padding: moderateScale(15),
-    alignItems: "center",
-    marginBottom: moderateScale(15),
-  },
-  promoText: {
-    fontSize: moderateScale(14),
-    color: "#333",
-  },
-  promoDiscount: {
-    fontSize: moderateScale(20),
-    fontWeight: "bold",
-    color: "#E76F51",
-  },
-  orderButton: {
-    marginTop: moderateScale(10),
-    backgroundColor: "#E76F51",
-    paddingHorizontal: moderateScale(15),
-    paddingVertical: moderateScale(5),
-    borderRadius: moderateScale(5),
-  },
-  orderButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  divider: {
-    height: moderateScale(1),
-    backgroundColor: "#333",
-    marginVertical: moderateScale(15),
-    alignSelf: "center",
-    width: "80%",
-  },
   sortedTitle: {
     fontSize: moderateScale(18),
     fontWeight: "bold",
     marginBottom: moderateScale(10),
   },
-  cardList: {
-    alignItems: "center",
-  },
-  seeMoreText: {
-    textAlign: "right",
-    fontSize: moderateScale(14),
-    color: "#000",
-    textDecorationLine: "underline",
-    fontFamily: "PoppinsMedium",
-    marginBottom: moderateScale(20),
-  },
+  cardList: {},
 });

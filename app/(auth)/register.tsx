@@ -13,7 +13,7 @@ import { AntDesign, FontAwesome, Entypo } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { moderateScale } from "@/utils/spacing";
 import Toast from "react-native-toast-message";
-import { Register } from "@/api/auth";
+import { registerUser } from "@/api/auth";
 import useStore from "@/hooks/useStore";
 
 export default function SignupScreen() {
@@ -26,54 +26,47 @@ export default function SignupScreen() {
   const setToken = useStore((state) => state.setToken);
 
   const handleRegister = async () => {
-            router.push("/(onboarding)");
+    setLoading(true);
+    try {
+      if (
+        username === "" ||
+        email === "" ||
+        password === "" ||
+        confirmPassword === ""
+      ) {
+        Toast.show({
+          type: "error",
+          text1: "Registration Failed",
+          text2: "Please fill all the fields.",
+        });
+        return;
+      }
+      if (password !== confirmPassword) {
+        Toast.show({
+          type: "error",
+          text1: "Registration Failed",
+          text2: "Passwords do not match.",
+        });
+        return;
+      }
+      const response = await registerUser(email, username, password);
+      if (response.token) {
+        setToken(response.token);
 
-    // setLoading(true);
-    // try {
-    //   if (
-    //     username === "" ||
-    //     email === "" ||
-    //     password === "" ||
-    //     confirmPassword === ""
-    //   ) {
-    //     Toast.show({
-    //       type: "error",
-    //       text1: "Registration Failed",
-    //       text2: "Please fill all the fields.",
-    //     });
-    //     return;
-    //   }
-    //   if (password !== confirmPassword) {
-    //     Toast.show({
-    //       type: "error",
-    //       text1: "Registration Failed",
-    //       text2: "Passwords do not match.",
-    //     });
-    //     return;
-    //   }
-    //   const response = await Register(email, username, password);
-    //   if (response.token) {
-    //     setToken(response.token); 
-
-    //     Toast.show({
-    //       type: "success",
-    //       text1: "Registration Successful",
-    //     });
-    //     router.push("/(onboarding)");
-    //   } else {
-    //     throw new Error("Token not provided in response");
-    //   }
-    // } catch (error) {
-    //   Toast.show({
-    //     type: "error",
-    //     text1: "Registration Failed",
-    //     text2: (error as any).response?.data?.message || "An error occurred.",
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
+        Toast.show({
+          type: "success",
+          text1: "Registration Successful",
+        });
+        router.push("/(onboarding)");
+      } else {
+        throw new Error("Token not provided in response");
+      }
+    } catch (error) {
+      console.log("Registeration failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
-
 
   return (
     <ImageBackground
@@ -127,37 +120,10 @@ export default function SignupScreen() {
             style={styles.signupButton}
             onPress={handleRegister}
           >
-            <Text style={styles.signupButtonText}>sign-up</Text>
+            <Text style={styles.signupButtonText}>
+              {loading ? "Signing up..." : "Sign Up"}
+            </Text>
           </TouchableOpacity>
-
-          <Text style={styles.orText}>OR</Text>
-
-          <View style={styles.socialLoginContainer}>
-            <TouchableOpacity>
-              <AntDesign
-                name="google"
-                size={30}
-                color="#DB4437"
-                style={styles.socialIcon}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <FontAwesome
-                name="apple"
-                size={30}
-                color="#000"
-                style={styles.socialIcon}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Entypo
-                name="facebook"
-                size={30}
-                color="#3b5998"
-                style={styles.socialIcon}
-              />
-            </TouchableOpacity>
-          </View>
 
           <Text style={styles.loginText}>
             Already have an account?{" "}

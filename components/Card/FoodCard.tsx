@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { Dish } from "@/interfaces";
 
 interface FoodCardProps {
   title: string;
@@ -10,11 +18,18 @@ interface FoodCardProps {
   isFeatured: boolean;
   price?: string;
   mealTiming?: string; // e.g., "Breakfast", "Lunch", "Dinner"
+  dish: Dish;
 }
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get("window").width;
 
-export default function FoodCard({ title, description, image, isFeatured, price, mealTiming }: FoodCardProps) {
+export default function FoodCard({
+  title,
+  description,
+  image,
+  isFeatured,
+  dish,
+}: FoodCardProps) {
   const [isFavorite, setIsFavorite] = useState(isFeatured);
 
   const handleFavoriteToggle = () => {
@@ -23,13 +38,9 @@ export default function FoodCard({ title, description, image, isFeatured, price,
 
   const handleCardPress = () => {
     router.push({
-      pathname: '/details',
+      pathname: "/details",
       params: {
-        title,
-        description,
-        image,
-        price,
-        mealTiming,
+        dish: JSON.stringify(dish),
       },
     });
   };
@@ -37,58 +48,73 @@ export default function FoodCard({ title, description, image, isFeatured, price,
   return (
     <TouchableOpacity onPress={handleCardPress} style={styles.card}>
       <View style={styles.imageContainer}>
-        <Image source={image} style={styles.cardImage} />
-        <TouchableOpacity onPress={handleFavoriteToggle} style={styles.favoriteIcon}>
-          <FontAwesome 
-            name="star" 
-            size={12} 
-            color={isFavorite ? "#FFD700" : "#ccc"} 
+        <Image
+          source={
+            image
+              ? { uri: image }
+              : require("../../assets/images/assets/sussi.png")
+          }
+          style={styles.cardImage}
+        />
+
+        <TouchableOpacity
+          onPress={handleFavoriteToggle}
+          style={styles.favoriteIcon}
+        >
+          <FontAwesome
+            name="star"
+            size={12}
+            color={isFavorite ? "#FFD700" : "#ccc"}
           />
         </TouchableOpacity>
       </View>
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardDescription}>{description}</Text>
+      <Text numberOfLines={1} style={styles.cardTitle}>
+        {title}
+      </Text>
+      <Text numberOfLines={2} style={styles.cardDescription}>
+        {description}
+      </Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     margin: 6,
     borderRadius: 6,
-    position: 'relative',
-    alignItems: 'flex-start',
+    position: "relative",
+    alignItems: "flex-start",
     width: screenWidth / 3 - 20, // Width adjusted for three columns with padding
   },
   imageContainer: {
-    width: '100%',
+    width: "100%",
     height: 80,
-    position: 'relative',
+    position: "relative",
   },
   cardImage: {
-    width: '100%',
+    width: "100%",
     height: 80,
     borderRadius: 6,
   },
   favoriteIcon: {
-    position: 'absolute',
+    position: "absolute",
     top: 5,
     right: 5,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 30,
     padding: 4,
   },
   cardTitle: {
     fontSize: 14,
-    fontFamily: 'PoppinsSemiBold',
-    textAlign: 'left',
+    fontFamily: "PoppinsSemiBold",
+    textAlign: "left",
     marginTop: 8,
   },
   cardDescription: {
     fontSize: 9,
-    fontFamily: 'PoppinsMedium',
-    color: '#6F6F6F',
-    textAlign: 'left',
+    fontFamily: "PoppinsMedium",
+    color: "#6F6F6F",
+    textAlign: "left",
   },
 });

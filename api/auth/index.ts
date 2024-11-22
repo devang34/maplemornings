@@ -15,14 +15,15 @@ export interface RegisterResponse {
   token: string;
 }
 
-export const Register = async (
+export const registerUser = async (
   email: string,
   username: string,
   password: string
 ): Promise<RegisterResponse> => {
   try {
+    console.log(email, password, username);
     const response = await axsinstance.post<RegisterResponse>(
-      `http://localhost:3333/auth/signIn`,
+      `http://localhost:3333/auth/signup`,
       {
         email,
         username,
@@ -35,13 +36,15 @@ export const Register = async (
     } else {
       throw new Error("Registration failed");
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.log("Error object:", error);
     const errorMessage =
-      (error as any).response?.data?.message ||
-      "An unexpected error occurred during registration.";
+      error.response?.data?.error || // Server-provided error message
+      error.message || // Fallback for network errors
+      "An unexpected error occurred during sign-up."; // Default error
     Toast.show({
       type: "error",
-      text1: "Registration Failed",
+      text1: "Sign-up Failed",
       text2: errorMessage,
     });
     throw error;
@@ -51,6 +54,8 @@ export interface AuthResponse {
   token: string;
   isAdmin: boolean;
   isRegistered: boolean;
+  diseaseId: string;
+  username: string;
 }
 export const Signin = async (
   identifier: string,
@@ -81,4 +86,4 @@ export const Signin = async (
     });
     throw error;
   }
-};   
+};

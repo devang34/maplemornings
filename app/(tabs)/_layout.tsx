@@ -1,28 +1,19 @@
-import { router, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import React from "react";
-import { View, StyleSheet, Platform, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
-import {
-  DealsIcon,
-  DietIcon,
-  HomeIcon,
-  StatusIcon,
-} from "@/components/navigation/Icons";
+import { StyleSheet, Platform } from "react-native";
+import { Entypo, Feather, Ionicons } from "@expo/vector-icons";
 import { moderateScale } from "@/utils/spacing";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const activeColor = Colors[colorScheme ?? "light"].tint;
-  const inactiveColor = "#000"; // Set the inactive color as per your design
+  const activeColor = "#000";
+  const inactiveColor = "#000";
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: inactiveColor,
-        tabBarShowLabel: false, // Remove labels for a cleaner look
+        tabBarShowLabel: false,
         headerShown: false,
         tabBarStyle: styles.tabBar,
       }}
@@ -31,39 +22,64 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, focused }) => <HomeIcon color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: "Explore",
-          tabBarIcon: ({ color, focused }) => <StatusIcon color={color} />,
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              {...props}
-              style={{
-                ...styles.iconWrapper,
-              }}
-              onPress={() => router.push("/(onboarding)")}
-            >
-              <StatusIcon />
-            </TouchableOpacity>
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"} // Change icon based on focus
+              size={moderateScale(28)}
+              color={color}
+              style={focused ? styles.activeIcon : styles.inactiveIcon}
+            />
           ),
         }}
       />
       <Tabs.Screen
-        name="nutrition"
+        name="order"
         options={{
-          title: "Nutrition",
-          tabBarIcon: ({ color, focused }) => <DietIcon />,
+          title: "Order",
+          tabBarIcon: ({ color, focused }) =>
+            focused ? (
+              <Entypo
+                name="shopping-bag"
+                size={moderateScale(28)}
+                color={color}
+                style={focused ? styles.activeIcon : styles.inactiveIcon}
+              />
+            ) : (
+              <Feather
+                name="shopping-bag"
+                size={moderateScale(28)}
+                color={color}
+                style={focused ? styles.activeIcon : styles.inactiveIcon}
+              />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="dietary"
+        options={{
+          title: "Dietary",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "nutrition" : "nutrition-outline"} // Change icon based on focus
+              size={moderateScale(28)}
+              color={color}
+              style={focused ? styles.activeIcon : styles.inactiveIcon}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="deals"
         options={{
           title: "Deals",
-          tabBarIcon: ({ color, focused }) => <DealsIcon color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "pricetag" : "pricetag-outline"} // Change icon based on focus
+              size={moderateScale(28)}
+              color={color}
+              style={focused ? styles.activeIcon : styles.inactiveIcon}
+            />
+          ),
         }}
       />
     </Tabs>
@@ -75,9 +91,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderWidth: moderateScale(1),
     borderColor: "#424242",
-    height: moderateScale(65), // Increase height slightly for better alignment
-    paddingBottom: Platform.OS === "ios" ? moderateScale(10) : moderateScale(5), // Adjust bottom padding for iOS
-    paddingTop: Platform.OS === "ios" ? moderateScale(15) : moderateScale(5), // Adjust top padding for iOS
+    height: moderateScale(65),
+    paddingBottom: Platform.OS === "ios" ? moderateScale(10) : moderateScale(5),
     alignItems: "center",
     position: "absolute",
     bottom: moderateScale(20),
@@ -94,17 +109,13 @@ const styles = StyleSheet.create({
     shadowRadius: 0,
     elevation: 0,
   },
-
-  iconWrapper: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: moderateScale(50),
-    height: moderateScale(50),
+  activeIcon: {
     borderRadius: moderateScale(12),
-    marginTop: moderateScale(2), // Adjust top margin to center icons better
+    padding: moderateScale(5),
   },
-  activeIconWrapper: {
-    borderColor: "#32CD32",
+  inactiveIcon: {
+    borderRadius: moderateScale(12),
+    backgroundColor: "transparent",
+    padding: moderateScale(5),
   },
 });
-

@@ -22,26 +22,37 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const setToken = useStore((state) => state.setToken);
+  const setIsVerified = useStore((state) => state.setIsVerified);
+  const setDisease = useStore((state) => state.setDisease);
+  const setUsername = useStore((state) => state.setUsername);
 
   const handleLogin = async () => {
     setLoading(true);
-    // console.log("Logging in with:", identifier, password);
-    // try {
-    //   console.log("Login response222:", identifier, password);
-    //   const response = await Signin(identifier, password);
-    //   console.log("Login response:", response);
-    //   setToken(response.token);
-    //   Toast.show({
-    //     type: "success",
-    //     text1: "Login Successful",
-    //     text2: `Welcome back, ${identifier}!`,
-    //   });
-      router.push("/(tabs)");
-    // } catch (error) {
-    //   console.log("Login failed:", error);
-    // } finally {
-    //   setLoading(false);
-    // }
+    console.log("Logging in with:", identifier, password);
+    try {
+      console.log("Login response222:", identifier, password);
+      const response = await Signin(identifier, password);
+      console.log("Login response:", response);
+      setToken(response.token);
+      setIsVerified(response.isRegistered);
+      setDisease(response.diseaseId);
+      setUsername(response.username);
+
+      Toast.show({
+        type: "success",
+        text1: "Login Successful",
+        text2: `Welcome back, ${identifier}!`,
+      });
+      if (response.isRegistered) {
+        router.push("/(tabs)");
+      } else {
+        router.push("/(onboarding)");
+      }
+    } catch (error) {
+      console.log("Login failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,35 +97,6 @@ export default function Login() {
               {loading ? "Logging in..." : "login"}
             </Text>
           </TouchableOpacity>
-
-          <Text style={styles.orText}>OR</Text>
-
-          <View style={styles.socialLoginContainer}>
-            <TouchableOpacity>
-              <AntDesign
-                name="google"
-                size={30}
-                color="#DB4437"
-                style={styles.socialIcon}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <FontAwesome
-                name="apple"
-                size={30}
-                color="#000"
-                style={styles.socialIcon}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Entypo
-                name="facebook"
-                size={30}
-                color="#3b5998"
-                style={styles.socialIcon}
-              />
-            </TouchableOpacity>
-          </View>
 
           <Text style={styles.signupText}>
             Don't have an account?{" "}

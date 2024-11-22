@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   dropdownList: {
     width: width * 0.8,
     backgroundColor: '#FFF3E0',
-    height: width * 0.6,
+    maxHeight: width * 0.8,
     borderRadius: moderateScale(8),
     paddingVertical: moderateScale(10),
   },

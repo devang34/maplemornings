@@ -19,9 +19,6 @@ export const createAxiosInstance = (): AxiosInstance => {
         console.warn("Network error or timeout. Redirecting to auth page.");
         removeToken();
         router.push("/(auth)");
-      } else if (error.response?.status === 401) {
-        console.warn("Unauthorized access - clearing token.");
-        removeToken();
       } else {
         console.warn("An unknown error occurred:", error);
       }
@@ -29,6 +26,6 @@ export const createAxiosInstance = (): AxiosInstance => {
       return Promise.reject(error);
     }
   );
-  
+
   return instance;
 };
