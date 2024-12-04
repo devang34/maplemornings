@@ -1,32 +1,37 @@
 import React, { useEffect, useState } from "react";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  ImageBackground,
   Image,
+  View,
+  Dimensions,
+  Text,
+  TextInput,
+  TouchableOpacity,
   ScrollView,
+  Modal,
+  FlatList,
+  StyleSheet,
+  Platform,
 } from "react-native";
-import Dropdown from "@/components/Dropdown";
-import { moderateScale } from "@/utils/spacing";
-import { router } from "expo-router";
-import { getAllDiseases, getDishByDisease } from "@/api/diseases";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Disease, getAllDiseases, getDishByDisease } from "@/api/diseases";
 import useStore from "@/hooks/useStore";
+import { moderateScale } from "@/utils/spacing";
 import Toast from "react-native-toast-message";
+import { router } from "expo-router";
 
-const { height } = Dimensions.get("window");
+const screenHeight = Dimensions.get("window").height;
 
-const DietaryForm: React.FC = () => {
+const DietaryForm = () => {
+  const [dateOfBirth, setDateOfBirth] = useState<string>("");
   const [age, setAge] = useState<string>("");
   const [dietaryConcern, setDietaryConcern] = useState<string>("");
-  const [diseaseOptions, setDiseaseOptions] = useState<
-    Array<{ label: string; value: string }>
-  >([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [expandedDish, setExpandedDish] = useState<number | null>(null); // Track expanded dish by index
-  const [showDishes, setShowDishes] = useState(false);
+  const [diseases, setDiseases] = useState<Disease[]>([]);
+  const [selectedDisease, setSelectedDisease] = useState<Disease | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const setIsVerified = useStore((state) => state.setIsVerified);
+  const setDisease = useStore((state) => state.setDisease);
   const [dishes, setDishes] = useState<
     Array<{
       id: number;
@@ -37,14 +42,11 @@ const DietaryForm: React.FC = () => {
       price: string;
     }>
   >([]);
+  const [submitted, setSubmitted] = useState(false);
+  const [diseaseOptions, setDiseaseOptions] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
   const token = useStore((state) => state.token);
-  const setIsVerified = useStore((state) => state.setIsVerified);
-  const setDisease = useStore((state) => state.setDisease);
-
-  const ageOptions = Array.from({ length: 100 }, (_, i) => ({
-    label: `${i + 1}`,
-    value: `${i + 1}`,
-  }));
 
   const handleSubmit = () => {
     if (!age || !dietaryConcern) {
@@ -57,17 +59,18 @@ const DietaryForm: React.FC = () => {
     }
     getDishByDisease(age, dietaryConcern, token || "")
       .then((res) => {
-        console.log(res);
         setDishes(res);
         setSubmitted(true);
         setIsVerified(true);
         setDisease(dietaryConcern);
+
+        const selected = diseases.find(
+          (disease) => disease.id.toString() === dietaryConcern
+        );
+        console.log(selected, "sel");
+        setSelectedDisease(selected || null);
       })
       .catch((err) => console.log(err));
-  };
-
-  const toggleDishDetails = (index: number) => {
-    setExpandedDish(expandedDish === index ? null : index);
   };
 
   useEffect(() => {
@@ -77,6 +80,8 @@ const DietaryForm: React.FC = () => {
           label: disease.name,
           value: disease.id.toString(),
         }));
+        setDiseases(res);
+        console.log(res);
         setDiseaseOptions(formattedOptions);
       })
       .catch((err) => {
@@ -84,206 +89,223 @@ const DietaryForm: React.FC = () => {
       });
   }, []);
 
-  return (
-    <View style={styles.container}>
-      {/* Top Background Image as Overlay */}
-      <ImageBackground
-        source={require("../assets/images/assets/top_bg.png")}
-        style={styles.topImage}
-      />
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || new Date(dateOfBirth);
+    setShowDatePicker(Platform.OS === "ios");
+    setDateOfBirth(currentDate.toLocaleDateString());
+  };
 
-      {/* Scrollable Form Background */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <ImageBackground
-          source={require("../assets/images/assets/onboarding_bg.png")}
-          style={styles.formBackground}
-        >
-          <View style={styles.contentContainer}>
-            <View style={styles.formContainer}>
-              {/* Home Button */}
-              <TouchableOpacity
-                style={styles.homeButton}
-                onPress={() => router.push("/(tabs)")}
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
+  };
+
+  const renderPickerItem = ({
+    item,
+  }: {
+    item: { label: string; value: string };
+  }) => (
+    <TouchableOpacity
+      style={styles.pickerItem}
+      onPress={() => {
+        setDietaryConcern(item.value);
+        setModalVisible(false);
+      }}
+    >
+      <Text style={styles.pickerItemText}>{item.label}</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={{ flex: 1 }}>
+          <View style={{ flex: 1 }}>
+            {/* Header Section */}
+            <View style={styles.headerSection}>
+              <Image
+                source={require("../assets/images/mapple.png")}
+                style={styles.headerImage}
+                resizeMode="cover"
+              />
+            </View>
+            <View
+              style={{
+                backgroundColor: "#FFC72C",
+                width: "100%",
+                height: 10,
+              }}
+            ></View>
+
+            {/* Form Content */}
+            <View style={{ padding: 20 }}>
+              <Text style={styles.title}>
+                Concerned for your dietary restrictions?
+              </Text>
+
+              <Text style={styles.subtitle}>
+                Maple Medical got you covered!
+              </Text>
+
+              {/* Date of Birth and Age Input */}
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
               >
-                <Text style={styles.homeButtonText}>Home</Text>
+                <View style={{ width: "30%" }}>
+                  <Text style={styles.label}>Age</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: "#FFC72C33",
+                        borderColor: "#FFC72C",
+                        fontFamily: "PoppinsSemiBold",
+                        fontSize: moderateScale(16),
+                        color: "#FFC72C",
+                        alignItems: "center",
+                      },
+                    ]}
+                    placeholder="XX"
+                    value={age}
+                    placeholderTextColor={"#FFC72C"}
+                    onChangeText={setAge}
+                    keyboardType="number-pad"
+                    // editable={false}
+                  />
+                </View>
+              </View>
+
+              {/* Dietary Concern Picker */}
+              <Text style={styles.label}>Choose the Dietary concern</Text>
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={{ fontSize: moderateScale(16) }}>
+                  {diseaseOptions.find(
+                    (option) => option.value === dietaryConcern
+                  )?.label || "Select a dietary concern"}
+                </Text>
               </TouchableOpacity>
 
-              {/* Logo */}
-              <Image
-                source={require("../assets/images/assets/logo.png")}
-                style={styles.logo}
-              />
+              <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType="fade"
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <FlatList
+                      data={diseaseOptions}
+                      renderItem={renderPickerItem}
+                      keyExtractor={(item) => item.value}
+                    />
+                    <TouchableOpacity
+                      style={styles.modalCloseButton}
+                      onPress={() => setModalVisible(false)}
+                    >
+                      <Text style={styles.modalCloseButtonText}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
 
-              {/* Titles */}
-              <Text style={styles.title}>
-                Concerned for your{" "}
-                <Text style={styles.highlight}>dietary restrictions?</Text>
-              </Text>
-              <Text style={styles.subtitle}>
-                Maple Mornings{" "}
-                <Text style={styles.highlightAlt}>got you covered!</Text>
-              </Text>
+              {submitted && (
+                <View style={styles.infoBox}>
+                  <Text style={styles.infoTitle}>
+                    Some information on staying healthy!
+                  </Text>
+                  <Text style={styles.infoText}>
+                    {selectedDisease?.prevention}
+                  </Text>
+                </View>
+              )}
 
-              {!submitted ? (
-                <>
-                  {/* Age Dropdown */}
-                  <Dropdown
-                    label="Enter your age"
-                    options={ageOptions}
-                    selectedValue={age}
-                    onValueChange={setAge}
-                  />
-
-                  {/* Dietary Concern Dropdown */}
-                  <Dropdown
-                    label="Choose the dietary concern"
-                    options={diseaseOptions}
-                    selectedValue={dietaryConcern}
-                    onValueChange={setDietaryConcern}
-                  />
-
-                  {/* Submit Button */}
-                  <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handleSubmit}
-                  >
-                    <Text style={styles.submitButtonText}>Submit</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  {/* Only Dietary Concern Dropdown after submission */}
-                  <Dropdown
-                    label="Choose the dietary concern"
-                    options={diseaseOptions}
-                    selectedValue={dietaryConcern}
-                    onValueChange={setDietaryConcern}
-                  />
-
-                  <View style={styles.dishContainer}>
-                    {dishes.map((dish, index) => (
+              <TouchableOpacity
+                onPress={handleSubmit}
+                style={styles.saveButton}
+              >
+                {submitted ? (
+                  <Text style={styles.saveButtonText}>Edit</Text>
+                ) : (
+                  <Text style={styles.saveButtonText}>Save</Text>
+                )}
+              </TouchableOpacity>
+              {submitted && (
+                <View style={styles.dishContainer}>
+                  {dishes.map((dish, index) => (
                       <View key={index} style={styles.dishCard}>
                         <Image
-                          source={
-                            dish.image.startsWith("data:image")
-                              ? { uri: dish.image }
-                              : require("../assets/images/assets/sussi.png")
-                          }
+                          source={{ uri: dish.image }}
                           style={styles.dishImage}
                         />
                         <Text style={styles.dishTitle}>{dish.name}</Text>
                       </View>
-                    ))}
-                  </View>
-
+                  ))}
                   <TouchableOpacity
-                    style={styles.moreButton}
                     onPress={() => router.push("/(tabs)")}
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
                   >
-                    <Text style={styles.moreButtonText}>Click for more</Text>
+                    <Text style={{ textDecorationLine: "underline" }}>
+                      View More
+                    </Text>
                   </TouchableOpacity>
-                </>
+                </View>
               )}
             </View>
           </View>
-        </ImageBackground>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#FFC107",
-  },
-  topImage: {
-    position: "absolute",
-    width: "100%",
-    height: height * 0.36,
-    top: 0,
-    zIndex: -1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingTop: height * 0.36,
-  },
-  contentContainer: {
-    flex: 1,
-    width: "100%",
-    alignItems: "center",
-  },
-  formBackground: {
-    flex: 1,
-    zIndex: 100,
-    width: "100%",
-    alignItems: "center",
-    position: "relative",
-    height: height,
-    top: -height * 0.1,
-    paddingTop: moderateScale(20),
-  },
-  formContainer: {
-    width: "85%",
-    alignItems: "center",
-    paddingVertical: moderateScale(70),
-    borderRadius: moderateScale(10),
-  },
-  homeButton: {
-    position: "absolute",
-    top: moderateScale(80),
-    left: -10,
     backgroundColor: "#fff",
-    paddingHorizontal: moderateScale(10),
-    paddingVertical: moderateScale(4),
-    borderRadius: moderateScale(4),
-    alignItems: "center",
-    flexDirection: "row",
+    paddingBottom: moderateScale(32),
   },
-  homeButtonText: {
-    color: "#333",
-    fontFamily: "PoppinsBold",
-    fontSize: moderateScale(13),
+  headerSection: {
+    backgroundColor: "#0F6D41",
+    width: "100%",
+    height: screenHeight * 0.35,
+    overflow: "hidden",
+    position: "relative",
   },
-  logo: {
-    width: moderateScale(120),
-    height: moderateScale(120),
-    resizeMode: "contain",
-    marginBottom: moderateScale(10),
+  headerImage: {
+    width: "100%",
+    height: screenHeight * 0.35,
+    position: "absolute",
   },
   title: {
-    fontSize: moderateScale(18),
-    color: "#333",
+    fontSize: 17,
     fontFamily: "PoppinsSemiBold",
-    textAlign: "center",
+    color: "#000",
   },
   subtitle: {
+    fontSize: 13,
+    color: "#0F6D41",
+    fontFamily: "PoppinsMedium",
+    marginBottom: 16,
+  },
+  label: {
     fontSize: moderateScale(16),
-    color: "#B33939",
-    fontFamily: "PoppinsSemiBold",
-    textAlign: "center",
-    marginBottom: moderateScale(10),
+    fontWeight: "500",
+    marginBottom: 8,
+    color: "#000",
   },
-  highlight: {
-    color: "#424242",
-  },
-  highlightAlt: {
-    color: "#fff",
-  },
-  submitButton: {
-    backgroundColor: "#D9534F",
-    paddingVertical: moderateScale(6),
-    paddingHorizontal: moderateScale(30),
-    borderRadius: moderateScale(8),
-    marginTop: moderateScale(20),
-  },
-  submitButtonText: {
-    color: "#fff",
+  input: {
+    borderWidth: 0.8,
+    borderColor: "#D9D9D9",
+    borderRadius: 3,
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(12),
+    marginBottom: moderateScale(16),
     fontSize: moderateScale(16),
-    fontFamily: "PoppinsLight",
   },
   dishContainer: {
     flexDirection: "row",
@@ -322,24 +344,70 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     flexShrink: 1,
   },
-  moreButton: {
-    backgroundColor: "#888",
-    paddingVertical: moderateScale(12),
-    paddingHorizontal: moderateScale(30),
-    borderRadius: moderateScale(8),
-    marginTop: moderateScale(20),
-    alignSelf: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+  pickerItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
-  moreButtonText: {
+  pickerItemText: {
+    fontSize: 16,
+    color: "#000",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 16,
+  },
+  modalCloseButton: {
+    marginTop: 16,
+    backgroundColor: "#0F6D41",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalCloseButtonText: {
     color: "#fff",
-    fontSize: moderateScale(14),
-    fontFamily: "PoppinsLight",
-    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  infoBox: {
+    backgroundColor: "#E8F5E9",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#0F6D41",
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+    color: "#000",
+  },
+  infoText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#666",
+    fontStyle: "italic",
+  },
+  saveButton: {
+    backgroundColor: "#0F6D41",
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

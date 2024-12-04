@@ -6,6 +6,7 @@ export interface Dish {
   info: string;
   meals: string;
   price: string;
+  calorie: string;
 }
 
 export interface CartCreate {
@@ -27,6 +28,8 @@ export interface Order {
   status: string;
   paymentStatus: string;
   dish: Dish;
+  address: string;
+  pincode: string;
 }
 
 export interface Coupon {

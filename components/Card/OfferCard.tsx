@@ -1,76 +1,86 @@
+import { moderateScale } from "@/utils/spacing";
 import React from "react";
 import {
   View,
   Text,
-  Image,
+  ImageBackground,
   StyleSheet,
-  TouchableOpacity,
   Pressable,
 } from "react-native";
 
-export default function PromoBanner({ code, discount }: any) {
+export default function PromoBanner({
+  imageSource,
+  promoText,
+  promoTextColor,
+  orderButtonBg,
+  promoDiscount,
+}: any) {
   return (
-    <View style={styles.promoBanner}>
+    <ImageBackground
+      source={imageSource}
+      style={styles.promoBanner}
+      imageStyle={styles.promoImage}
+    >
       <View style={styles.textContainer}>
-        <Text style={styles.promoText}>Use code:</Text>
-        <Text style={styles.promoDiscount}>{code}</Text>
-        <Text style={styles.promoText}>Get {discount}% off</Text>
+        <Text style={[styles.promoText, { color: promoTextColor }]}>
+          Use {promoText} to get
+        </Text>
+        {promoDiscount && (
+          <Text style={[styles.promoDiscount, { color: promoTextColor }]}>
+            {promoDiscount}% discount
+          </Text>
+        )}
         <View
           style={{ justifyContent: "flex-start", alignItems: "flex-start" }}
         >
-          <Pressable style={styles.orderButton}>
-            <Text style={styles.orderButtonText}>Apply Now</Text>
+          <Pressable
+            style={[styles.orderButton, { backgroundColor: orderButtonBg }]}
+          >
+            <Text style={styles.orderButtonText}>Order Now</Text>
           </Pressable>
         </View>
       </View>
-
-      {/* Image Section */}
-      <Image
-        source={require("../../assets/images/assets/offer.png")}
-        style={styles.promoImage}
-      />
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   promoBanner: {
-    backgroundColor: "#F5DF9D",
-    borderRadius: 10,
-    padding: 15,
+    borderRadius: moderateScale(5),
+    padding: moderateScale(15),
     flexDirection: "row",
     alignItems: "center",
+    height: moderateScale(110),
+    width: "100%",
     justifyContent: "space-between",
-    marginBottom: 15,
+    marginBottom: moderateScale(10), // Decreased margin bottom
   },
   textContainer: {
     flex: 1,
   },
   promoText: {
-    fontSize: 18,
-    color: "#333",
-    fontFamily: "PoppinsRegular",
+    fontSize: moderateScale(16),
+    width: "60%",
+    fontFamily: "PoppinsSemiBold",
   },
   promoDiscount: {
-    fontSize: 20,
+    fontSize: moderateScale(15),
     fontFamily: "PoppinsBold",
-    color: "#E76F51",
   },
   orderButton: {
-    marginTop: 10,
-    backgroundColor: "#FF7043",
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    borderRadius: 5,
+    marginTop: moderateScale(10),
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(5),
+    borderRadius: moderateScale(30),
   },
   orderButtonText: {
-    fontFamily: "PoppinsSemiBold",
-    color: "#fff",
+    fontFamily: "PoppinsMedium",
+    color: "#000",
+    fontSize: moderateScale(10),
   },
   promoImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 30,
-    marginLeft: 10,
+    borderRadius: moderateScale(5),
+    objectFit: "cover",
+    width: "100%",
   },
 });
