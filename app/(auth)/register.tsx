@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import {
-  ImageBackground,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
 } from "react-native";
-import { AntDesign, FontAwesome, Entypo } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { moderateScale } from "@/utils/spacing";
-import Toast from "react-native-toast-message";
 import { registerUser } from "@/api/auth";
+import Toast from "react-native-toast-message";
+import { Link, router } from "expo-router";
 import useStore from "@/hooks/useStore";
 
 export default function SignupScreen() {
@@ -28,12 +29,7 @@ export default function SignupScreen() {
   const handleRegister = async () => {
     setLoading(true);
     try {
-      if (
-        username === "" ||
-        email === "" ||
-        password === "" ||
-        confirmPassword === ""
-      ) {
+      if (!username || !email || !password || !confirmPassword) {
         Toast.show({
           type: "error",
           text1: "Registration Failed",
@@ -49,184 +45,200 @@ export default function SignupScreen() {
         });
         return;
       }
-      const response = await registerUser(email, username, password);
-      if (response.token) {
-        setToken(response.token);
-
-        Toast.show({
-          type: "success",
-          text1: "Registration Successful",
+      registerUser(email, username, password)
+        .then((response) => {
+          console.log(response, "re");
+          setToken(response.token);
+          setUsername(username);
+          Toast.show({
+            type: "success",
+            text1: "Registration Successful",
+          });
+          router.push("/(onboarding)/diet");
+        })
+        .catch((error) => {
+          console.log(error, "err");
+          Toast.show({
+            type: "error",
+            text1: "Registration Failed",
+            text2: error,
+          });
         });
-        router.push("/(onboarding)");
-      } else {
-        throw new Error("Token not provided in response");
-      }
-    } catch (error) {
-      console.log("Registeration failed:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/assets/back2.png")}
-      style={styles.background}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../../assets/images/assets/logo.png")}
-            style={styles.logo}
-          />
-        </View>
-
-        <View style={styles.signupContainer}>
-          <Text style={styles.heading}>Welcome...</Text>
-          <Text style={styles.subheading}>signup to fill your cravings!!!</Text>
-
-          <TextInput
-            placeholder="name"
-            style={styles.input}
-            value={username}
-            onChangeText={setUsername}
-          />
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="email address"
-            style={styles.input}
-            keyboardType="email-address"
-          />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="password"
-            secureTextEntry
-            style={styles.input}
-          />
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="re-type password"
-            secureTextEntry
-            style={styles.input}
-          />
-
-          <TouchableOpacity
-            style={styles.signupButton}
-            onPress={handleRegister}
-          >
-            <Text style={styles.signupButtonText}>
-              {loading ? "Signing up..." : "Sign Up"}
+    <SafeAreaView style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.illustrationContainer}>
+            <Image
+              source={require("../../assets/images/assets/Login.png")}
+              style={styles.illustration}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>ALMOST AT YOUR PLATE</Text>
+            <Text style={styles.subtitle}>
+              Login or Signup to fill your cravings!!!
             </Text>
-          </TouchableOpacity>
+          </View>
 
-          <Text style={styles.loginText}>
-            Already have an account?{" "}
-            <Link href="/(auth)" style={styles.loginLink}>
-              Login Here
-            </Link>
-          </Text>
-        </View>
-      </ScrollView>
-    </ImageBackground>
+          <View style={styles.formContainer}>
+            <Text style={styles.formTitle}>Signup</Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email address"
+              placeholderTextColor="#999"
+              style={styles.input}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <TextInput
+              value={username}
+              onChangeText={setUsername}
+              placeholder="Username"
+              placeholderTextColor="#999"
+              style={styles.input}
+            />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password"
+              placeholderTextColor="#999"
+              textContentType="none" // Disables the strong password suggestion
+              autoComplete="off"
+              secureTextEntry
+              style={styles.input}
+            />
+            <TextInput
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Confirm "
+              placeholderTextColor="#999"
+              textContentType="none" // Disables the strong password suggestion
+              autoComplete="off"
+              secureTextEntry
+              style={styles.input}
+            />
+            <TouchableOpacity
+              style={styles.signupButton}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.signupButtonText}>
+                {loading ? "Signing up..." : "Signup"}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Already an account? </Text>
+              <Link href="/(auth)" style={styles.loginLink}>
+                Login here
+              </Link>
+            </View>
+          </View>
+          <View style={styles.yellowAccent} />
+        </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
-    justifyContent: "flex-start",
+    backgroundColor: "#0F6D41",
   },
-  scrollContainer: {
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
-    alignItems: "center",
-    paddingVertical: moderateScale(50),
   },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: moderateScale(20),
+  illustrationContainer: {
+    alignItems: "flex-start",
+    paddingHorizontal: moderateScale(32),
   },
-  logo: {
-    width: moderateScale(200),
+  illustration: {
+    width: moderateScale(300),
     height: moderateScale(200),
-    resizeMode: "contain",
   },
-  signupContainer: {
-    width: "90%",
-    maxWidth: moderateScale(400),
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    padding: moderateScale(20),
-    borderRadius: moderateScale(10),
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  heading: {
-    fontSize: moderateScale(18),
-    fontFamily: "PoppinsSemiBold",
-    color: "#333",
-    marginBottom: moderateScale(5),
-  },
-  subheading: {
-    fontSize: moderateScale(12),
-    fontFamily: "PoppinsLight",
-    color: "#555",
-    marginBottom: moderateScale(15),
+  title: {
+    fontSize: moderateScale(24),
+    fontFamily: "PoppinsBold",
+    color: "#FFFFFF",
     textAlign: "center",
-  },
-  input: {
-    width: "100%",
-    padding: moderateScale(10),
-    marginVertical: moderateScale(2),
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "transparent",
-    fontFamily: "PoppinsRegular",
-  },
-  signupButton: {
-    width: "100%",
-    padding: moderateScale(12),
-    backgroundColor: "#FFC107",
-    borderRadius: moderateScale(5),
-    alignItems: "center",
-    marginVertical: moderateScale(10),
-  },
-  signupButtonText: {
-    color: "#000",
-    fontSize: moderateScale(16),
-    fontFamily: "PoppinsSemiBold",
-  },
-  orText: {
-    fontSize: moderateScale(12),
-    fontFamily: "PoppinsRegular",
-    color: "#888",
-    marginVertical: moderateScale(10),
-  },
-  socialLoginContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "60%",
-    marginVertical: moderateScale(10),
-  },
-  socialIcon: {
-    marginHorizontal: moderateScale(10),
-  },
-  loginText: {
-    fontSize: moderateScale(12),
-    fontFamily: "PoppinsRegular",
-    color: "#333",
     marginTop: moderateScale(10),
   },
-  loginLink: {
-    color: "#FF6347",
+  subtitle: {
+    fontSize: moderateScale(12),
+    fontFamily: "PoppinsLight",
+    color: "#FFFFFF",
+    textAlign: "left",
+    fontStyle: "italic",
+    marginBottom: moderateScale(30),
+  },
+  formContainer: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: moderateScale(60),
+    padding: moderateScale(20),
+    paddingHorizontal: moderateScale(30),
+    paddingTop: moderateScale(30),
+    paddingBottom: moderateScale(50),
+    zIndex: 10,
+  },
+  formTitle: {
     fontFamily: "PoppinsBold",
+    fontSize: moderateScale(24),
+    color: "#333333",
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    paddingVertical: moderateScale(8),
+    fontFamily: "PoppinsRegular",
+    fontSize: moderateScale(14),
+    marginBottom: moderateScale(20),
+  },
+  signupButton: {
+    backgroundColor: "#0F6D41",
+    borderRadius: moderateScale(8),
+    paddingVertical: moderateScale(14),
+    alignItems: "center",
+    marginBottom: moderateScale(24),
+  },
+  signupButtonText: {
+    color: "#FFFFFF",
+    fontSize: moderateScale(18),
+    fontFamily: "PoppinsMedium",
+  },
+  loginContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  loginText: {
+    fontFamily: "PoppinsRegular",
+    fontSize: moderateScale(14),
+    color: "#666666",
+  },
+  loginLink: {
+    fontFamily: "PoppinsSemiBold",
+    fontSize: moderateScale(14),
+    color: "#0F6D41",
+  },
+  yellowAccent: {
+    height: "80%",
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: moderateScale(30), // Updated to use moderateScale
+    backgroundColor: "#FFC72C",
+    borderTopLeftRadius: moderateScale(38),
+    borderTopRightRadius: moderateScale(38),
+    zIndex: 1,
   },
 });

@@ -1,25 +1,26 @@
 import React, { useState } from "react";
 import {
-  ImageBackground,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
 } from "react-native";
-import { AntDesign, FontAwesome, Entypo } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { moderateScale } from "@/utils/spacing";
-import Toast from "react-native-toast-message";
-import { Signin } from "@/api/auth";
-import useStore from "@/hooks/useStore";
+import { Signin } from "@/api/auth"; // Make sure this is the correct import for your API
+import Toast from "react-native-toast-message"; // To show success/error messages
+import { router } from "expo-router";
+import useStore from "@/hooks/useStore"; // Assuming useStore is used for global state management
 
-export default function Login() {
-  const [identifier, setIdentifier] = useState("");
+const LoginScreen = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading state for login process
 
   const setToken = useStore((state) => state.setToken);
   const setIsVerified = useStore((state) => state.setIsVerified);
@@ -27,184 +28,233 @@ export default function Login() {
   const setUsername = useStore((state) => state.setUsername);
 
   const handleLogin = async () => {
-    setLoading(true);
-    console.log("Logging in with:", identifier, password);
+    setLoading(true); // Set loading to true while API request is in progress
+
     try {
-      console.log("Login response222:", identifier, password);
-      const response = await Signin(identifier, password);
+      // Call the Signin API with email and password
+      const response = await Signin(email, password);
       console.log("Login response:", response);
+
+      // Handle successful login
       setToken(response.token);
       setIsVerified(response.isRegistered);
       setDisease(response.diseaseId);
       setUsername(response.username);
 
+      // Show success toast
       Toast.show({
         type: "success",
         text1: "Login Successful",
-        text2: `Welcome back, ${identifier}!`,
+        text2: `Welcome back, ${response.username || email}!`,
       });
+
       if (response.isRegistered) {
-        router.push("/(tabs)");
+        router.replace("/(tabs)"); // Redirect to the main app (tabs screen)
       } else {
-        router.push("/(onboarding)");
+        router.replace("/(onboarding)/diet"); // Redirect to onboarding if not registered
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Handle error during login
       console.log("Login failed:", error);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: error.response.data.error,
+      });
+      console.log(error.response.data);
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading after API call is finished
     }
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/assets/back.png")}
-      style={styles.background}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../../assets/images/assets/logo.png")}
-            style={styles.logo}
-          />
-        </View>
-
-        <View style={styles.loginContainer}>
-          <Text style={styles.heading}>ALMOST AT YOUR PLATE</Text>
-          <Text style={styles.subheading}>
-            login or signup to fill your cravings!!!
-          </Text>
-
-          <TextInput
-            placeholder="username or e-mail"
-            value={identifier}
-            onChangeText={setIdentifier}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-          />
-
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.loginButtonText}>
-              {loading ? "Logging in..." : "login"}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoid}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Illustration Section */}
+          <View style={styles.illustrationContainer}>
+            <Image
+              source={require("../../assets/images/assets/Login.png")}
+              style={styles.illustration}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>ALMOST AT YOUR PLATE</Text>
+            <Text style={styles.subtitle}>
+              Login or signup to fill your cravings!!!
             </Text>
-          </TouchableOpacity>
+          </View>
 
-          <Text style={styles.signupText}>
-            Don't have an account?{" "}
+          {/* Login Form Section */}
+          <View style={styles.formContainer}>
             <Text
-              onPress={() => router.push("/(auth)/register")}
-              style={styles.signupLink}
+              style={{
+                fontFamily: "PoppinsBold",
+                fontSize: moderateScale(24),
+                color: "#333333",
+                marginBottom: moderateScale(20),
+              }}
             >
-              Signup Here
+              Login
             </Text>
-          </Text>
-        </View>
-      </ScrollView>
-    </ImageBackground>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email address or Username</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholder="Enter your email"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholder="Enter your password"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <TouchableOpacity onPress={() => router.push("/(auth)/forgot")}>
+              <Text style={styles.forgotPassword}>Forgot password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              disabled={loading} // Disable button while loading
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? "Logging in..." : "Login"}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+                <Text style={styles.signupLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View
+            style={{
+              height: "80%",
+              position: "absolute",
+              right: 0,
+              bottom: 0,
+              width: moderateScale(20), // Updated to use moderateScale
+              zIndex: 1,
+              backgroundColor: "#FFC72C",
+              borderTopLeftRadius: moderateScale(38),
+              borderTopRightRadius: moderateScale(38),
+            }}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
-    justifyContent: "flex-start",
+    backgroundColor: "#0F6D41",
   },
-  scrollContainer: {
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
-  logoContainer: {
+  illustrationContainer: {
+    flex: 1,
     alignItems: "center",
-    marginBottom: moderateScale(20),
-    marginTop: moderateScale(50),
+    paddingTop: moderateScale(40),
+    paddingHorizontal: moderateScale(20),
   },
-  logo: {
-    width: moderateScale(200),
+  illustration: {
+    width: moderateScale(300),
     height: moderateScale(200),
-    marginBottom: moderateScale(10),
   },
-  loginContainer: {
-    width: "90%",
-    maxWidth: moderateScale(400),
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    padding: moderateScale(20),
-    borderRadius: moderateScale(10),
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 6,
-    elevation: 8,
-    marginBottom: moderateScale(50),
-  },
-  heading: {
-    fontSize: moderateScale(18),
-    fontFamily: "PoppinsSemiBold",
-    color: "#333",
-    marginBottom: moderateScale(5),
-  },
-  subheading: {
-    fontSize: moderateScale(12),
-    fontFamily: "PoppinsLight",
-    color: "#555",
-    marginBottom: moderateScale(15),
+  title: {
+    fontSize: moderateScale(24),
+    fontFamily: "PoppinsBold",
+    color: "#FFFFFF",
     textAlign: "center",
   },
-  input: {
-    width: "100%",
-    padding: moderateScale(10),
-    marginVertical: moderateScale(2),
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "transparent",
+  subtitle: {
+    fontSize: moderateScale(14),
     fontFamily: "PoppinsRegular",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginTop: moderateScale(8),
+  },
+  formContainer: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: moderateScale(60),
+    padding: moderateScale(20),
+    paddingHorizontal: moderateScale(30),
+    paddingTop: moderateScale(30),
+    zIndex: 10,
+  },
+  inputContainer: {
+    marginBottom: moderateScale(20),
+  },
+  label: {
+    fontSize: moderateScale(14),
+    fontFamily: "PoppinsRegular",
+    color: "#333333",
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    paddingVertical: moderateScale(8),
+    fontFamily: "PoppinsRegular",
+    fontSize: moderateScale(14),
+  },
+  forgotPassword: {
+    fontFamily: "PoppinsRegular",
+    fontSize: moderateScale(14),
+    color: "#0F6D41",
+    textAlign: "left",
+    marginBottom: moderateScale(10),
   },
   loginButton: {
-    width: "100%",
-    padding: moderateScale(12),
-    backgroundColor: "#FFC107",
-    borderRadius: moderateScale(5),
+    backgroundColor: "#0F6D41",
+    borderRadius: moderateScale(4),
+    paddingVertical: moderateScale(14),
     alignItems: "center",
-    marginVertical: moderateScale(10),
+    marginBottom: moderateScale(24),
   },
   loginButtonText: {
-    color: "#000",
-    fontSize: moderateScale(16),
-    fontFamily: "PoppinsSemiBold",
+    color: "#FFFFFF",
+    fontSize: moderateScale(18),
+    fontFamily: "PoppinsMedium",
   },
-  orText: {
-    fontSize: moderateScale(12),
-    fontFamily: "PoppinsRegular",
-    color: "#888",
-    marginVertical: moderateScale(10),
-  },
-  socialLoginContainer: {
+  signupContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    width: "60%",
-    marginVertical: moderateScale(10),
-  },
-  socialIcon: {
-    marginHorizontal: moderateScale(10),
+    justifyContent: "flex-start",
+    alignItems: "center",
   },
   signupText: {
-    fontSize: moderateScale(12),
     fontFamily: "PoppinsRegular",
-    color: "#333",
-    marginTop: moderateScale(10),
+    fontSize: moderateScale(14),
+    color: "#666666",
   },
   signupLink: {
-    color: "#FF6347",
-    fontFamily: "PoppinsBold",
+    fontFamily: "PoppinsSemiBold",
+    fontSize: moderateScale(14),
+    color: "#0F6D41",
   },
 });
+
+export default LoginScreen;

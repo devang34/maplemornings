@@ -1,12 +1,12 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { StyleSheet, Platform } from "react-native";
-import { Entypo, Feather, Ionicons } from "@expo/vector-icons";
 import { moderateScale } from "@/utils/spacing";
+import { CouponIcon, DietIcon, HomeIcon, OrderIcon, ProfileIcon } from "@/components/navigation/Icons";
 
 export default function TabLayout() {
-  const activeColor = "#000";
-  const inactiveColor = "#000";
+  const activeColor = "#0F6D41";
+  const inactiveColor = "#878787";
 
   return (
     <Tabs
@@ -16,6 +16,7 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         headerShown: false,
         tabBarStyle: styles.tabBar,
+        tabBarItemStyle: styles.tabBarItem,
       }}
     >
       <Tabs.Screen
@@ -23,10 +24,9 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"} // Change icon based on focus
+            <HomeIcon
+              color={focused ? activeColor : inactiveColor}
               size={moderateScale(28)}
-              color={color}
               style={focused ? styles.activeIcon : styles.inactiveIcon}
             />
           ),
@@ -36,33 +36,23 @@ export default function TabLayout() {
         name="order"
         options={{
           title: "Order",
-          tabBarIcon: ({ color, focused }) =>
-            focused ? (
-              <Entypo
-                name="shopping-bag"
-                size={moderateScale(28)}
-                color={color}
-                style={focused ? styles.activeIcon : styles.inactiveIcon}
-              />
-            ) : (
-              <Feather
-                name="shopping-bag"
-                size={moderateScale(28)}
-                color={color}
-                style={focused ? styles.activeIcon : styles.inactiveIcon}
-              />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <OrderIcon
+              color={focused ? activeColor : inactiveColor}
+              size={moderateScale(28)}
+              style={focused ? styles.activeIcon : styles.inactiveIcon}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="dietary"
         options={{
-          title: "Dietary",
+          title: "Diet",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "nutrition" : "nutrition-outline"} // Change icon based on focus
+            <DietIcon
+              color={focused ? activeColor : inactiveColor}
               size={moderateScale(28)}
-              color={color}
               style={focused ? styles.activeIcon : styles.inactiveIcon}
             />
           ),
@@ -73,10 +63,22 @@ export default function TabLayout() {
         options={{
           title: "Deals",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "pricetag" : "pricetag-outline"} // Change icon based on focus
+            <CouponIcon
+              color={focused ? activeColor : inactiveColor}
               size={moderateScale(28)}
-              color={color}
+              style={focused ? styles.activeIcon : styles.inactiveIcon}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <ProfileIcon
+              color={focused ? activeColor : inactiveColor}
+              size={moderateScale(28)}
               style={focused ? styles.activeIcon : styles.inactiveIcon}
             />
           ),
@@ -88,26 +90,18 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: "#fff",
-    borderWidth: moderateScale(1),
-    borderColor: "#424242",
-    height: moderateScale(65),
-    paddingBottom: Platform.OS === "ios" ? moderateScale(10) : moderateScale(5),
+    height: moderateScale(70),
     alignItems: "center",
     position: "absolute",
-    bottom: moderateScale(20),
-    width: "90%",
-    marginHorizontal: "5%",
-    borderRadius: moderateScale(12),
+    width: "100%",
     left: 0,
     right: 0,
-
-    // Remove shadow
+    borderTopWidth: 1,
+    borderTopColor: "#878787",
     shadowColor: "transparent",
-    shadowOpacity: 0,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 0,
-    elevation: 0,
+  },
+  tabBarItem: {
+    paddingHorizontal: moderateScale(10),
   },
   activeIcon: {
     borderRadius: moderateScale(12),

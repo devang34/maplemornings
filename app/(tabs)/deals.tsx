@@ -5,23 +5,27 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  Dimensions,
+  RefreshControl,
 } from "react-native";
-import useStore from "@/hooks/useStore";
-import { SafeAreaView } from "react-native-safe-area-context";
-import PromoBanner from "@/components/Card/OfferCard";
 import { moderateScale } from "@/utils/spacing";
+import PromoBanner from "@/components/Card/OfferCard";
+import useStore from "@/hooks/useStore";
 import { getAllCoupons } from "@/api/coupon";
 import { Coupon } from "@/interfaces";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const { width } = Dimensions.get("screen");
 
 const Deals = () => {
   const token = useStore((state) => state.token);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
+  const [refreshing, setRefreshing] = useState(false);
   const fetchCoupons = async () => {
     try {
       const data = await getAllCoupons(token || "");
+      console.log(data);
       setCoupons(data);
     } catch (error) {
     } finally {
@@ -30,16 +34,15 @@ const Deals = () => {
     }
   };
 
-  useEffect(() => {
-    fetchCoupons();
-  }, [token]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
+  const handleRefresh = () => {
     fetchCoupons();
   };
 
-  const Header = () => <Text style={styles.header}>Deals</Text>;
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
+
+  const [loading, setLoading] = useState(false);
 
   if (loading) {
     return (
@@ -52,23 +55,42 @@ const Deals = () => {
   }
 
   return (
-    <SafeAreaView style={{ width: "100%" }}>
+    <SafeAreaView style={{ width, flex: 1, backgroundColor: "white" }}>
       <FlatList
         data={coupons}
-        ListHeaderComponent={Header}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={{ paddingHorizontal: moderateScale(24) }}>
-            <PromoBanner code={item.code} discount={item.discountPercentage} />
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+        ListHeaderComponent={
+          <View>
+            <Text style={styles.couponsHeader}>Coupons</Text>
+          </View>
+        }
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item, index }) => (
+          <View
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+              marginHorizontal: moderateScale(14),
+            }}
+          >
+            <PromoBanner
+              imageSource={
+                index % 2 === 0
+                  ? require("../../assets/images/deal.png")
+                  : require("../../assets/images/deal1.png")
+              }
+              promoText={item.code}
+              promoTextColor={index % 2 === 0 ? "#fff" : "#000"}
+              orderButtonBg={index % 2 === 0 ? "#FFC72C" : "#0F6D41"}
+              promoDiscount={item.discountPercentage}
+            />
           </View>
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <Text style={styles.emptyMessage}>No deals available.</Text>
-        }
-        refreshing={refreshing}
-        onRefresh={onRefresh} // Handle the pull-to-refresh action
       />
     </SafeAreaView>
   );
@@ -77,21 +99,22 @@ const Deals = () => {
 export default Deals;
 
 const styles = StyleSheet.create({
-  emptyMessage: {
-    textAlign: "center",
-    marginTop: moderateScale(20),
-    fontSize: moderateScale(16),
-    color: "#999",
-  },
   header: {
     fontSize: moderateScale(24),
-    fontWeight: "bold",
     textAlign: "center",
     marginVertical: moderateScale(20),
     color: "#333",
   },
+  couponsHeader: {
+    fontSize: moderateScale(20),
+    textAlign: "center",
+    marginBottom: moderateScale(10),
+    color: "#000",
+    fontWeight: "600",
+  },
   listContainer: {
-    paddingBottom: moderateScale(64),
-    height: "100%",
+    paddingBottom: moderateScale(48),
+    // height: "100%",
+    width,
   },
 });

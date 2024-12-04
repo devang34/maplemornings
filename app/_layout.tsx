@@ -41,11 +41,30 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <StripeProvider
-        publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""}
+        publishableKey={"pk_test_51QHj9JCuy3kT1fhWHWjYm1IKQyeu3hzKois8fIH5xVezp1bbmvCKHnOH1ny2mtPiVCRRvyEs26EyBpElsbHi39fp0098OHJhxO"}
       >
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+            animationDuration: 50,
+          }}
+        >
+          <Stack.Screen 
+            name="(tabs)" 
+            options={{ 
+              headerShown: false,
+              animation: 'fade',
+              animationDuration: 50,
+            }} 
+          />
+          <Stack.Screen 
+            name="+not-found"
+            options={{
+              animation: 'fade',
+              animationDuration: 50,
+            }}
+          />
         </Stack>
       </StripeProvider>
       <Toast />

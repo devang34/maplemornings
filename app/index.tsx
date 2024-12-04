@@ -26,11 +26,11 @@ const Index: React.FC = () => {
   }, [token, isVerified]);
 
   if (!token) {
-    return <Redirect href="/(auth)" />;
+    return <Redirect href="/(onboarding)" />;
   }
 
   if (token && !isVerified) {
-    return <Redirect href="/(onboarding)" />;
+    return <Redirect href="/(onboarding)/diet" />;
   }
 
   return <Redirect href="/(tabs)" />;

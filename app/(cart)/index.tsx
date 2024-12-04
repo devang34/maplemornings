@@ -12,11 +12,10 @@ import React, { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { getCart, removeCartItem } from "@/api/cart";
 import useStore from "@/hooks/useStore";
-import { IcBack } from "@/components/icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { moderateScale } from "@/utils/spacing";
-import { Entypo } from "@expo/vector-icons";
+import { Ionicons, Entypo } from "@expo/vector-icons";
 
 const CartPage = () => {
   const [loading, setLoading] = useState(true);
@@ -130,7 +129,7 @@ const CartPage = () => {
           style={styles.removeButton}
           onPress={() => handleRemoveItem(id)}
         >
-          <Entypo name="trash" size={24} color="#ff4d4d" />
+          <Entypo name="trash" size={moderateScale(24)} color="#ff4d4d" />
         </TouchableOpacity>
       </View>
     );
@@ -143,7 +142,7 @@ const CartPage = () => {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <IcBack />
+          <Ionicons name="arrow-back" size={moderateScale(20)} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cart</Text>
         <View style={styles.emptyButton} />
@@ -170,15 +169,7 @@ const CartPage = () => {
         />
       )}
       {cartItems.length > 0 && (
-        <View
-          style={{
-            paddingVertical: moderateScale(32),
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#F5F5F5",
-          }}
-        >
+        <View style={styles.orderContainer}>
           <TouchableOpacity
             style={[styles.orderButton, loading && styles.disabledButton]}
             onPress={handleOrderNow}
@@ -217,20 +208,17 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: moderateScale(20),
-    fontWeight: "bold",
-    marginLeft: moderateScale(8),
+    fontFamily: "PoppinsSemiBold",
+    color: "#000",
   },
   backButton: {
-    backgroundColor: "black",
-    opacity: 0.5,
-    padding: moderateScale(4),
-    borderRadius: moderateScale(120),
+    backgroundColor: "#0F6D41",
+    padding: moderateScale(5),
+    borderRadius: moderateScale(8),
   },
   emptyButton: {
-    backgroundColor: "white",
-    opacity: 0.5,
-    padding: moderateScale(4),
-    borderRadius: moderateScale(120),
+    backgroundColor: "transparent",
+    padding: moderateScale(5),
   },
   listContent: {
     paddingBottom: moderateScale(16),
@@ -238,11 +226,12 @@ const styles = StyleSheet.create({
   itemBox: {
     flexDirection: "row",
     marginBottom: moderateScale(16),
-    backgroundColor: "#f8f8f8",
     borderRadius: moderateScale(8),
-    overflow: "hidden",
-    elevation: 1,
+    borderWidth: 1,
+    gap: moderateScale(8),
+    borderColor: "#E7E7E7",
     alignItems: "center",
+    padding: moderateScale(8),
   },
   itemImage: {
     width: moderateScale(80),
@@ -250,21 +239,21 @@ const styles = StyleSheet.create({
   },
   itemDetails: {
     flex: 1,
-    padding: moderateScale(8),
   },
   itemName: {
-    fontWeight: "bold",
-    fontSize: moderateScale(16),
+    fontSize: moderateScale(15),
     marginBottom: moderateScale(4),
+    fontFamily: "PoppinsSemiBold",
   },
   itemPrice: {
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(13),
     color: "#333",
+    fontFamily: "PoppinsRegular",
   },
   itemTotal: {
     fontSize: moderateScale(14),
-    fontWeight: "bold",
     color: "#000",
+    fontFamily: "PoppinsRegular",
   },
   removeButton: {
     padding: moderateScale(8),
@@ -278,6 +267,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(18),
     color: "#555",
     marginBottom: moderateScale(16),
+    fontFamily: "PoppinsRegular",
   },
   shopNowButton: {
     backgroundColor: "#D9534F",
@@ -288,14 +278,20 @@ const styles = StyleSheet.create({
   shopNowText: {
     color: "#fff",
     fontSize: moderateScale(16),
+    fontFamily: "PoppinsSemiBold",
+  },
+  orderContainer: {
+    paddingVertical: moderateScale(32),
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   orderButton: {
-    backgroundColor: "#D9534F",
+    backgroundColor: "#0F6D41",
     paddingVertical: moderateScale(12),
-    paddingHorizontal: moderateScale(32),
-    borderRadius: moderateScale(8),
+    borderRadius: moderateScale(4),
     alignItems: "center",
-    width: "90%",
+    width: "100%",
   },
   disabledButton: {
     backgroundColor: "#ccc",

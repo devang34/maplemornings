@@ -1,9 +1,8 @@
-import { View, Text } from "react-native";
 import React from "react";
 import DietaryForm from "@/components/DietaryForm";
 
-const DietaryConcern = () => {
+const FirstDiet = () => {
   return <DietaryForm />;
 };
 
-export default DietaryConcern;
+export default FirstDiet;
