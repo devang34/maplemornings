@@ -58,6 +58,7 @@ export const getOrderById = async (orderId: number, token: string) => {
     const headers = {
       Authorization: `Bearer ${token}`,
     };
+    console.log(orderId, token);
 
     const response = await axsinstance.get(`${BASE_URL}/order/${orderId}`, {
       headers,

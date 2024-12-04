@@ -23,7 +23,7 @@ export const registerUser = async (
   try {
     console.log(email, password, username);
     const response = await axsinstance.post<RegisterResponse>(
-      `http://localhost:3333/auth/signup`,
+      `${BASE_URL}/auth/signup`,
       {
         email,
         username,
@@ -31,22 +31,9 @@ export const registerUser = async (
       }
     );
 
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error("Registration failed");
-    }
+    return response.data;
   } catch (error: any) {
     console.log("Error object:", error);
-    const errorMessage =
-      error.response?.data?.error || // Server-provided error message
-      error.message || // Fallback for network errors
-      "An unexpected error occurred during sign-up."; // Default error
-    Toast.show({
-      type: "error",
-      text1: "Sign-up Failed",
-      text2: errorMessage,
-    });
     throw error;
   }
 };
@@ -57,6 +44,7 @@ export interface AuthResponse {
   diseaseId: string;
   username: string;
 }
+
 export const Signin = async (
   identifier: string,
   password: string
@@ -75,15 +63,68 @@ export const Signin = async (
     return response.data;
   } catch (error: any) {
     console.log("Error object:", error);
+    throw error;
+  }
+};
+
+export const forgotPassword = async (email: string) => {
+  try {
+    const response = await axsinstance.post(
+      `${BASE_URL}/auth/forgot-password`,
+      {
+        email,
+      }
+    );
+
+    console.log("Response Data:", response.data);
+
+    return response.data;
+  } catch (error: any) {
+    console.log("Error object:", error);
     const errorMessage =
       error.response?.data?.error || // Server-provided error message
       error.message || // Fallback for network errors
-      "An unexpected error occurred during sign-in."; // Default error
+      "An unexpected error occurred during forgot password."; // Default error
     Toast.show({
       type: "error",
       text1: "Sign-in Failed",
       text2: errorMessage,
     });
     throw error;
+  }
+};
+
+export const resetPassword = async (
+  email: string,
+  otp: string,
+  newPassword: string
+) => {
+  try {
+    const response = await axsinstance.post(`${BASE_URL}/auth/reset-password`, {
+      email,
+      otp,
+      newPassword,
+    });
+
+    console.log("Response Data:", response.data);
+
+    return response.data;
+  } catch (error: any) {
+    console.log("Error object:", error);
+    throw error;
+  }
+};
+
+export const getProfile = async (token: string) => {
+  try {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    const response = await axsinstance.get(`${BASE_URL}/user`, { headers });
+
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || new Error("Failed to get profile");
   }
 };

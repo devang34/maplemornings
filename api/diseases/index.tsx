@@ -92,3 +92,22 @@ export const getDishByDiseases = async (
     throw error;
   }
 };
+
+export const getDishById = async (dishId: string | null, token: string) => {
+  try {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+    console.log(token, dishId);
+
+    const response = await axsinstance.get(
+      `${BASE_URL}/dishes/${dishId}`,
+      {
+        headers,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
